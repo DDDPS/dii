@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/moby/moby/client"
@@ -23,9 +22,6 @@ func NewDaemonProvider() (*DaemonProvider, error) {
 func (p *DaemonProvider) GetMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
 
 	imageInput = strings.TrimSpace(imageInput)
-	if imageInput == "" {
-		return nil, errors.New("image input cannot be empty")
-	}
 
 	imgRes, err := p.cli.ImageInspect(ctx, imageInput)
 	if err != nil {
