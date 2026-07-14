@@ -2,23 +2,34 @@ package exporter
 
 import (
 	"context"
-	"errors"
 
 	"DII/pkg/provider"
 )
 
-func ExportInfo(ctx context.Context, imageInput string, opt string) (string, error) {
-	switch opt {
-	case "md", "yaml", "json", "":
+type exportConfig struct {
+	format string
+}
 
-	default:
-		return "", errors.New("error format")
+type ExportOption func(*exportConfig)
+
+func WithFormat(format string) ExportOption {
+	return func(c *exportConfig) {
+		c.format = format
 	}
+}
+
+func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (string, error) {
+
+	cfg := &exportConfig{}
+	for _, optFn := range opts {
+		optFn(cfg)
+	}
+
 	imageMeta, err := provider.GetImageMeta(ctx, imageInput)
 	if err != nil {
 		return "", err
 	}
-	switch opt {
+	switch cfg.format {
 	case "json":
 		return ExportJson(imageMeta)
 	case "md":
