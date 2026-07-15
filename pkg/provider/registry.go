@@ -50,7 +50,7 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 
 	imageMeta := &ImageMeta{
 		ID:           digest.String(),
-		RepoTags:     []string{tag.Identifier()},
+		RepoTags:     []string{tag.String()},
 		OS:           cfgFile.OS,
 		Architecture: cfgFile.Architecture,
 		Size:         size,

@@ -36,6 +36,8 @@ func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (s
 		return ExportMarkdown(imageMeta)
 	case "yaml":
 		return ExportYaml(imageMeta)
+	case "compose":
+		return ExportCompose(imageMeta)
 	default:
 		return ExportMarkdown(imageMeta)
 	}

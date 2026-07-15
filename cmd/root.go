@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "markdown,json,yaml")
+	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "Output format: markdown,json,yaml,compose")
 }
 
 func Execute() {
