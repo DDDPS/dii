@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/moby/moby/client"
@@ -19,8 +21,7 @@ func NewDaemonProvider() (*DaemonProvider, error) {
 	return &DaemonProvider{cli: apiClient}, nil
 }
 
-func (p *DaemonProvider) GetMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
-
+func (p *DaemonProvider) GetMetaDaemon(ctx context.Context, imageInput string) (*ImageMeta, error) {
 	imageInput = strings.TrimSpace(imageInput)
 
 	imgRes, err := p.cli.ImageInspect(ctx, imageInput)
@@ -28,6 +29,7 @@ func (p *DaemonProvider) GetMeta(ctx context.Context, imageInput string) (*Image
 		return nil, err
 	}
 
+	fmt.Fprintf(os.Stderr, "This image is local.\n")
 	return &ImageMeta{
 		ID:           imgRes.ID,
 		RepoTags:     imgRes.RepoTags,

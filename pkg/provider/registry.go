@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -12,7 +13,7 @@ import (
 	v1 "github.com/moby/docker-image-spec/specs-go/v1"
 )
 
-func GetMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
+func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error) {
 	tag, err := name.ParseReference(imageInput)
 	if err != nil {
 		return nil, fmt.Errorf("parse image error: %v", err)
@@ -57,5 +58,6 @@ func GetMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
 		Config:       &dockerConfig,
 	}
 
+	fmt.Fprintf(os.Stderr, "This image is from the remote registry.\n")
 	return imageMeta, nil
 }

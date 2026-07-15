@@ -14,7 +14,7 @@ type ImageMeta struct {
 	Architecture string                   `json:"Architecture"` //架构
 	Size         int64                    `json:"Size"`         //大小
 	Created      string                   `json:"Created"`      //创建时间
-	Config       *v1.DockerOCIImageConfig `json:"Config"`       //配置
+	Config       *v1.DockerOCIImageConfig `json:"Config"`       //配置-包含env port volumes等
 }
 
 func GetImageMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
@@ -24,11 +24,13 @@ func GetImageMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
 	}
 	defer p.cli.Close()
 
-	imageMate, err := p.GetMeta(ctx, imageInput)
-
+	imageMate, err := p.GetMetaDaemon(ctx, imageInput)
 	if err != nil {
-		return nil, err
+		imageMate, err = GetMetaRegistry(ctx, imageInput)
+		if err != nil {
+			return nil, err
+		}
+		return imageMate, nil
 	}
-
 	return imageMate, nil
 }

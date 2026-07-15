@@ -24,21 +24,20 @@ var rootCmd = &cobra.Command{
 		f := exporter.WithFormat(format)
 		info, err := exporter.ExportInfo(ctx, imageInput, f)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
 		} else {
-			fmt.Println(info)
+			fmt.Fprintf(cmd.OutOrStdout(), "%s", info)
 		}
 	},
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&format, "ouptut", "o", "md", "markdown,json,yaml")
+	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "markdown,json,yaml")
 }
 
 func Execute() {
 	ctx := context.Background()
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
