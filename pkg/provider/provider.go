@@ -18,25 +18,47 @@ type ImageMeta struct {
 	Config       *v1.DockerOCIImageConfig `json:"Config"`       //配置-包含env port volumes等
 }
 
-func GetImageMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
-	p, err := NewDaemonProvider()
-	if p != nil {
-		defer p.cli.Close()
-	}
-
-	if err == nil && p != nil {
-		imageMate, err := p.GetMetaDaemon(ctx, imageInput)
-		if err == nil {
-			return imageMate, nil
+func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMeta, error) {
+	switch mode {
+	case "daemon":
+		p, err := NewDaemonProvider()
+		if p != nil {
+			defer p.cli.Close()
 		}
-		fmt.Fprintf(os.Stderr, "local image inspect failed: %v\n will try remote registry...\n", err)
-	} else if err != nil {
-		fmt.Fprintf(os.Stderr, "init docker client error: %v\n will try remote registry...\n", err)
-	}
+		if err != nil {
+			return nil, err
+		} else {
+			imageMeta, err := p.GetMetaDaemon(ctx, imageInput)
+			if err != nil {
+				return nil, err
+			}
+			return imageMeta, nil
+		}
 
-	imageMate, err := GetMetaRegistry(ctx, imageInput)
-	if err != nil {
-		return nil, err
+	case "registry":
+		fmt.Fprintf(os.Stderr, "Pulling image from remote registry...\n")
+		return GetMetaRegistry(ctx, imageInput)
+
+	default:
+		p, err := NewDaemonProvider()
+		if p != nil {
+			defer p.cli.Close()
+		}
+
+		if err == nil && p != nil {
+			imageMate, err := p.GetMetaDaemon(ctx, imageInput)
+			if err == nil {
+				return imageMate, nil
+			}
+			fmt.Fprintf(os.Stderr, "%v\n will try remote registry...\n", err)
+		} else if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n will try remote registry...\n", err)
+		}
+
+		imageMate, err := GetMetaRegistry(ctx, imageInput)
+		if err != nil {
+			return nil, err
+		}
+		return imageMate, nil
 	}
-	return imageMate, nil
 }

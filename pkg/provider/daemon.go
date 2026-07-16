@@ -16,7 +16,7 @@ type DaemonProvider struct {
 func NewDaemonProvider() (*DaemonProvider, error) {
 	apiClient, err := client.New(client.FromEnv)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("init docker client error: %v", err)
 	}
 	return &DaemonProvider{cli: apiClient}, nil
 }
@@ -26,7 +26,7 @@ func (p *DaemonProvider) GetMetaDaemon(ctx context.Context, imageInput string) (
 
 	imgRes, err := p.cli.ImageInspect(ctx, imageInput)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("daemon image inspect error: %v", err)
 	}
 
 	fmt.Fprintf(os.Stderr, "This image is local.\n")

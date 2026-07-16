@@ -7,7 +7,10 @@ import (
 )
 
 type exportConfig struct {
-	format string
+	format      string
+	useDaemon   bool
+	useRegistry bool
+	write       bool
 }
 
 type ExportOption func(*exportConfig)
@@ -18,6 +21,17 @@ func WithFormat(format string) ExportOption {
 	}
 }
 
+func WithUseDaemon(useDaemon bool) ExportOption {
+	return func(c *exportConfig) {
+		c.useDaemon = useDaemon
+	}
+}
+func WithUseRegistry(useRegistry bool) ExportOption {
+	return func(c *exportConfig) {
+		c.useRegistry = useRegistry
+	}
+}
+
 func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (string, error) {
 
 	cfg := &exportConfig{}
@@ -25,7 +39,14 @@ func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (s
 		optFn(cfg)
 	}
 
-	imageMeta, err := provider.GetImageMeta(ctx, imageInput)
+	var mode string
+	if cfg.useDaemon {
+		mode = "daemon"
+	} else if cfg.useRegistry {
+		mode = "registry"
+	}
+
+	imageMeta, err := provider.GetImageMeta(ctx, imageInput, mode)
 	if err != nil {
 		return "", err
 	}

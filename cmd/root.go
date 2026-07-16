@@ -12,19 +12,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var format string
+var (
+	format      string
+	useDaemon   bool
+	useRegistry bool
+)
 
 var rootCmd = &cobra.Command{
-	Use:  "dii [IMAGE]",
+	Use:  "dii [flags] [IMAGE]",
 	Long: "Quickly retrieve key information about the image.",
 
 	Args: cobra.ExactArgs(1),
 
 	Run: func(cmd *cobra.Command, args []string) {
+		if useDaemon && useRegistry {
+			fmt.Fprintln(cmd.ErrOrStderr(), "Error: Cannot specify both --daemon (-d) and --registry (-r)")
+			os.Exit(1)
+		}
 		imageInput := args[0]
 		ctx := cmd.Context()
-		f := exporter.WithFormat(format)
-		info, err := exporter.ExportInfo(ctx, imageInput, f)
+		o := exporter.WithFormat(format)
+		ud := exporter.WithUseDaemon(useDaemon)
+		ur := exporter.WithUseRegistry(useRegistry)
+
+		info, err := exporter.ExportInfo(ctx, imageInput, o, ud, ur)
 		if err != nil {
 			if ctx.Err() != nil {
 				fmt.Fprintln(cmd.ErrOrStderr(), "\n✕ Operation cancelled by user")
@@ -38,7 +49,10 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.Flags().SortFlags = false
 	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "Output format: markdown,json,yaml,compose")
+	rootCmd.Flags().BoolVarP(&useDaemon, "daemon", "d", false, "Retrieve image data via the local Docker daemon")
+	rootCmd.Flags().BoolVarP(&useRegistry, "registry", "r", false, "Retrieve image data via a remote registry")
 }
 
 func Execute() {
