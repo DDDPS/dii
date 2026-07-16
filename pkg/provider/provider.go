@@ -2,7 +2,8 @@ package provider
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"os"
 
 	v1 "github.com/moby/docker-image-spec/specs-go/v1"
 )
@@ -19,18 +20,24 @@ type ImageMeta struct {
 
 func GetImageMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
 	p, err := NewDaemonProvider()
-	if err != nil {
-		log.Printf("init docker client error: %v", err)
+	if p != nil {
+		defer p.cli.Close()
 	}
-	defer p.cli.Close()
 
-	imageMate, err := p.GetMetaDaemon(ctx, imageInput)
-	if err != nil {
-		imageMate, err = GetMetaRegistry(ctx, imageInput)
-		if err != nil {
-			return nil, err
+	if err == nil && p != nil {
+		imageMate, err := p.GetMetaDaemon(ctx, imageInput)
+		if err == nil {
+			return imageMate, nil
 		}
-		return imageMate, nil
+
+		fmt.Fprintf(os.Stderr, "local image inspect failed: %v, trying remote registry...\n", err)
+	} else if err != nil {
+		fmt.Fprintf(os.Stderr, "init docker client error: %v, trying remote registry...\n", err)
+	}
+
+	imageMate, err := GetMetaRegistry(ctx, imageInput)
+	if err != nil {
+		return nil, err
 	}
 	return imageMate, nil
 }

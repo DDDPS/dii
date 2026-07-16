@@ -7,6 +7,7 @@ require (
 	github.com/moby/docker-image-spec v1.3.1
 	github.com/moby/moby/client v0.5.0
 	gopkg.in/yaml.v3 v3.0.1
+	github.com/spf13/cobra v1.10.2
 )
 
 require (
@@ -28,7 +29,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
-	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect

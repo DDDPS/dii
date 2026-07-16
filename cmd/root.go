@@ -14,7 +14,7 @@ var format string
 
 var rootCmd = &cobra.Command{
 	Use:  "dii [IMAGE]",
-	Long: "this long msg",
+	Long: "Quickly retrieve key information about the image.",
 
 	Args: cobra.ExactArgs(1),
 
