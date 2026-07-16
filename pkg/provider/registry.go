@@ -52,9 +52,14 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 		return nil, fmt.Errorf("get image digest error: %v", err)
 	}
 
-	size, err := img.Size()
+	manifest, err := img.Manifest()
 	if err != nil {
-		return nil, fmt.Errorf("get image size error: %v", err)
+		return nil, fmt.Errorf("get image manifest error: %v", err)
+	}
+
+	var size int64
+	for _, layer := range manifest.Layers {
+		size += layer.Size
 	}
 
 	// (ggcr) v1.Config -> (moby) v1.DockerOCIImageConfig
