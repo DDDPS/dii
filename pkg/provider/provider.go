@@ -29,10 +29,9 @@ func GetImageMeta(ctx context.Context, imageInput string) (*ImageMeta, error) {
 		if err == nil {
 			return imageMate, nil
 		}
-
-		fmt.Fprintf(os.Stderr, "local image inspect failed: %v, trying remote registry...\n", err)
+		fmt.Fprintf(os.Stderr, "local image inspect failed: %v\n will try remote registry...\n", err)
 	} else if err != nil {
-		fmt.Fprintf(os.Stderr, "init docker client error: %v, trying remote registry...\n", err)
+		fmt.Fprintf(os.Stderr, "init docker client error: %v\n will try remote registry...\n", err)
 	}
 
 	imageMate, err := GetMetaRegistry(ctx, imageInput)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -18,7 +20,25 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 	if err != nil {
 		return nil, fmt.Errorf("parse image error: %v", err)
 	}
-	img, err := remote.Image(tag, remote.WithContext(ctx), remote.WithAuthFromKeychain(authn.DefaultKeychain))
+
+	customTransport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   5 * time.Second,  //TCP建连超时
+			KeepAlive: 15 * time.Second, //TCP保活探测
+		}).DialContext,
+		ForceAttemptHTTP2:     true,             //强制优先使用HTTP2
+		MaxIdleConns:          100,              //最大空闲连接数
+		IdleConnTimeout:       90 * time.Second, //空闲连接超时
+		TLSHandshakeTimeout:   10 * time.Second, //TLS握手超时
+		ResponseHeaderTimeout: 10 * time.Second, //等待响应头超时
+		ExpectContinueTimeout: 1 * time.Second,  //ExpectContinue握手超时
+	}
+
+	img, err := remote.Image(tag,
+		remote.WithContext(ctx),
+		remote.WithAuthFromKeychain(authn.DefaultKeychain),
+		remote.WithTransport(customTransport),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("pull image from registry error: %v", err)
 	}

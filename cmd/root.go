@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"DII/pkg/exporter"
 
@@ -24,7 +26,11 @@ var rootCmd = &cobra.Command{
 		f := exporter.WithFormat(format)
 		info, err := exporter.ExportInfo(ctx, imageInput, f)
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
+			if ctx.Err() != nil {
+				fmt.Fprintln(cmd.ErrOrStderr(), "\n✕ Operation cancelled by user")
+			} else {
+				fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+			}
 		} else {
 			fmt.Fprintf(cmd.OutOrStdout(), "%s", info)
 		}
@@ -36,7 +42,9 @@ func init() {
 }
 
 func Execute() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
