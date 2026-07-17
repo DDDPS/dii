@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	v1 "github.com/moby/docker-image-spec/specs-go/v1"
 )
@@ -39,7 +40,14 @@ func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMe
 		fmt.Fprintf(os.Stderr, "Pulling image from remote registry...\n")
 		return GetMetaRegistry(ctx, imageInput)
 
+	case "tarball":
+		return GetMetaTarball(ctx, imageInput)
+
 	default:
+		if info, err := os.Stat(imageInput); err == nil && !info.IsDir() && (strings.HasSuffix(imageInput, ".tar") || strings.HasSuffix(imageInput, ".tar.gz") || strings.HasSuffix(imageInput, ".tgz")) {
+			return GetMetaTarball(ctx, imageInput)
+		}
+
 		p, err := NewDaemonProvider()
 		if p != nil {
 			defer p.cli.Close()

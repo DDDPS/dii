@@ -16,6 +16,7 @@ var (
 	format      string
 	useDaemon   bool
 	useRegistry bool
+	useTarball  bool
 	write       string
 )
 
@@ -26,8 +27,18 @@ var rootCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 
 	Run: func(cmd *cobra.Command, args []string) {
-		if useDaemon && useRegistry {
-			fmt.Fprintln(cmd.ErrOrStderr(), "Error: Cannot specify both --daemon (-d) and --registry (-r)")
+		count := 0
+		if useDaemon {
+			count++
+		}
+		if useRegistry {
+			count++
+		}
+		if useTarball {
+			count++
+		}
+		if count > 1 {
+			fmt.Fprintln(cmd.ErrOrStderr(), "Error: Cannot specify more than one data source flag: choose either --daemon (-d), --registry (-r), or --tar (-t)")
 			os.Exit(1)
 		}
 		imageInput := args[0]
@@ -35,8 +46,9 @@ var rootCmd = &cobra.Command{
 		o := exporter.WithFormat(format)
 		ud := exporter.WithUseDaemon(useDaemon)
 		ur := exporter.WithUseRegistry(useRegistry)
+		ut := exporter.WithUseTarball(useTarball)
 
-		info, err := exporter.ExportInfo(ctx, imageInput, o, ud, ur)
+		info, err := exporter.ExportInfo(ctx, imageInput, o, ud, ur, ut)
 		if err != nil {
 			if ctx.Err() != nil {
 				fmt.Fprintln(cmd.ErrOrStderr(), "\n✕ Operation cancelled by user")
@@ -63,6 +75,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "Output format: markdown,json,yaml,compose")
 	rootCmd.Flags().BoolVarP(&useDaemon, "daemon", "d", false, "Retrieve image data via the local Docker daemon")
 	rootCmd.Flags().BoolVarP(&useRegistry, "registry", "r", false, "Retrieve image data via a remote registry")
+	rootCmd.Flags().BoolVarP(&useTarball, "tar", "t", false, "Retrieve image data from a local image")
 	rootCmd.Flags().StringVarP(&write, "write", "w", "", "Write the image data to a file(0644): dii ubuntu -w <filename>")
 }
 

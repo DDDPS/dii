@@ -10,6 +10,7 @@ type exportConfig struct {
 	format      string
 	useDaemon   bool
 	useRegistry bool
+	useTarball  bool
 }
 
 type ExportOption func(*exportConfig)
@@ -30,6 +31,11 @@ func WithUseRegistry(useRegistry bool) ExportOption {
 		c.useRegistry = useRegistry
 	}
 }
+func WithUseTarball(useTarball bool) ExportOption {
+	return func(c *exportConfig) {
+		c.useTarball = useTarball
+	}
+}
 
 func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (string, error) {
 
@@ -43,6 +49,8 @@ func ExportInfo(ctx context.Context, imageInput string, opts ...ExportOption) (s
 		mode = "daemon"
 	} else if cfg.useRegistry {
 		mode = "registry"
+	} else if cfg.useTarball {
+		mode = "tarball"
 	}
 
 	imageMeta, err := provider.GetImageMeta(ctx, imageInput, mode)
