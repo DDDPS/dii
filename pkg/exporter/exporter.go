@@ -10,7 +10,6 @@ type exportConfig struct {
 	format      string
 	useDaemon   bool
 	useRegistry bool
-	write       bool
 }
 
 type ExportOption func(*exportConfig)

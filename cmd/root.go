@@ -16,6 +16,7 @@ var (
 	format      string
 	useDaemon   bool
 	useRegistry bool
+	write       string
 )
 
 var rootCmd = &cobra.Command{
@@ -43,7 +44,16 @@ var rootCmd = &cobra.Command{
 				fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
 			}
 		} else {
-			fmt.Fprintf(cmd.OutOrStdout(), "%s", info)
+			if write != "" {
+				err := os.WriteFile(write, []byte(info), 0644)
+				fmt.Fprintf(cmd.ErrOrStderr(), "written to file: %s\n", write)
+				if err != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				fmt.Fprintf(cmd.OutOrStdout(), "%s", info)
+			}
 		}
 	},
 }
@@ -53,6 +63,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "Output format: markdown,json,yaml,compose")
 	rootCmd.Flags().BoolVarP(&useDaemon, "daemon", "d", false, "Retrieve image data via the local Docker daemon")
 	rootCmd.Flags().BoolVarP(&useRegistry, "registry", "r", false, "Retrieve image data via a remote registry")
+	rootCmd.Flags().StringVarP(&write, "write", "w", "", "Write the image data to a file(0644): dii ubuntu -w <filename>")
 }
 
 func Execute() {
