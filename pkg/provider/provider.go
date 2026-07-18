@@ -58,9 +58,13 @@ func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMe
 			if err == nil {
 				return imageMate, nil
 			}
-			fmt.Fprintf(os.Stderr, "%v\n will try remote registry...\n", err)
+			if strings.Contains(err.Error(), "No such image") {
+				fmt.Fprintf(os.Stderr, "Image not found in local daemon, trying remote registry...\n")
+			} else {
+				fmt.Fprintf(os.Stderr, "Local daemon check failed (%v), trying remote registry...\n", err)
+			}
 		} else if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n will try remote registry...\n", err)
+			fmt.Fprintf(os.Stderr, "Could not connect to local Docker daemon, trying remote registry...\n")
 		}
 
 		imageMate, err := GetMetaRegistry(ctx, imageInput)
