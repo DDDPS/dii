@@ -15,18 +15,29 @@ type ComposeFile struct {
 	Services map[string]*Service `yaml:"services"`
 }
 
+type Healthcheck struct {
+	Test        []string `yaml:"test,omitempty"`
+	Interval    string   `yaml:"interval,omitempty"`
+	Timeout     string   `yaml:"timeout,omitempty"`
+	Retries     int      `yaml:"retries,omitempty"`
+	StartPeriod string   `yaml:"start_period,omitempty"`
+}
+
 type Service struct {
 	Image         string            `yaml:"image,omitempty"`
+	Platform      string            `yaml:"platform,omitempty"`
 	ContainerName string            `yaml:"container_name,omitempty"`
 	Restart       string            `yaml:"restart,omitempty"`
 	User          string            `yaml:"user,omitempty"`
 	WorkingDir    string            `yaml:"working_dir,omitempty"`
+	StopSignal    string            `yaml:"stop_signal,omitempty"`
 	Entrypoint    []string          `yaml:"entrypoint,omitempty"`
 	Command       []string          `yaml:"command,omitempty"`
 	Ports         []string          `yaml:"ports,omitempty"`
 	Volumes       []string          `yaml:"volumes,omitempty"`
 	Environment   map[string]string `yaml:"environment,omitempty"`
 	Labels        map[string]string `yaml:"labels,omitempty"`
+	Healthcheck   *Healthcheck      `yaml:"healthcheck,omitempty"`
 }
 
 func ExportCompose(im *provider.ImageMeta) (string, error) {
@@ -47,6 +58,10 @@ func ExportCompose(im *provider.ImageMeta) (string, error) {
 		Image: imageName,
 	}
 
+	if im.OS != "" && im.Architecture != "" {
+		service.Platform = fmt.Sprintf("%s/%s", im.OS, im.Architecture)
+	}
+
 	if im.Config != nil {
 		upperService := strings.ToUpper(serviceName)
 
@@ -64,6 +79,31 @@ func ExportCompose(im *provider.ImageMeta) (string, error) {
 		// working_dir
 		if im.Config.WorkingDir != "" {
 			service.WorkingDir = im.Config.WorkingDir
+		}
+
+		// stop_signal
+		if im.Config.StopSignal != "" {
+			service.StopSignal = im.Config.StopSignal
+		}
+
+		// healthcheck
+		if im.Config.Healthcheck != nil {
+			hc := im.Config.Healthcheck
+			service.Healthcheck = &Healthcheck{
+				Test: hc.Test,
+			}
+			if hc.Interval > 0 {
+				service.Healthcheck.Interval = hc.Interval.String()
+			}
+			if hc.Timeout > 0 {
+				service.Healthcheck.Timeout = hc.Timeout.String()
+			}
+			if hc.StartPeriod > 0 {
+				service.Healthcheck.StartPeriod = hc.StartPeriod.String()
+			}
+			if hc.Retries > 0 {
+				service.Healthcheck.Retries = hc.Retries
+			}
 		}
 
 		// entrypoint
