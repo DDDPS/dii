@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -38,7 +37,7 @@ var rootCmd = &cobra.Command{
 			count++
 		}
 		if count > 1 {
-			fmt.Fprintln(cmd.ErrOrStderr(), "Error: Cannot specify more than one data source flag: choose either --daemon (-d), --registry (-r), or --tar (-t)")
+			cmd.PrintErrln("Error: Cannot specify more than one data source flag: choose either --daemon (-d), --registry (-r), or --tar (-t)")
 			os.Exit(1)
 		}
 		imageInput := args[0]
@@ -51,20 +50,20 @@ var rootCmd = &cobra.Command{
 		info, err := exporter.ExportInfo(ctx, imageInput, o, ud, ur, ut)
 		if err != nil {
 			if ctx.Err() != nil {
-				fmt.Fprintln(cmd.ErrOrStderr(), "\n✕ Operation cancelled by user")
+				cmd.PrintErrln("\n✕ Operation cancelled by user")
 			} else {
-				fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+				cmd.PrintErrln(err)
 			}
 		} else {
 			if write != "" {
 				err := os.WriteFile(write, []byte(info), 0644)
-				fmt.Fprintf(cmd.ErrOrStderr(), "written to file: %s\n", write)
+				cmd.PrintErrln("written to file:", write)
 				if err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+					cmd.PrintErrln(err)
 					os.Exit(1)
 				}
 			} else {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s", info)
+				cmd.Println(info)
 			}
 		}
 	},
