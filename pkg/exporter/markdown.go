@@ -46,7 +46,6 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if imageMeta.Config.StopSignal != "" {
 			sb.WriteString(fmt.Sprintf("- **StopSignal**: `%s`\n", imageMeta.Config.StopSignal))
 		}
-		sb.WriteString(fmt.Sprintf("- **ArgsEscaped**: `%t`\n", imageMeta.Config.ArgsEscaped))
 
 		// ExposedPorts
 		if len(imageMeta.Config.ExposedPorts) > 0 {
