@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+
+  test:
+    name: Run Unit Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+      - name: Run Unit Tests
+        run: go test -v ./tests
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows]
+        goarch: [amd64, arm64]
+    
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          EXT=""
+          if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
+          go build -v -o dist/dii-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} main.go
+
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: dii-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/

@@ -1,0 +1,30 @@
+version: "2"
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+  settings:
+    errcheck:
+  
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Printf
+        - fmt.Println
+        - (*github.com/spf13/cobra.Command).Printf
+        - (*github.com/spf13/cobra.Command).Println
+        - (*github.com/spf13/cobra.Command).Print
+        - (*github.com/spf13/cobra.Command).PrintErrln
+        - (*github.com/spf13/cobra.Command).PrintErrf
