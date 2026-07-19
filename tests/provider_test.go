@@ -3,6 +3,7 @@ package tests
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"os"
 	"path/filepath"
@@ -162,5 +163,55 @@ func TestGetMetaRegistryInvalidImage(t *testing.T) {
 	_, err := provider.GetMetaRegistry(ctx, "invalid_image_name_#@!")
 	if err == nil {
 		t.Error("Expected GetMetaRegistry to fail for invalid image name, got nil")
+	}
+}
+
+func TestGetMetaTarballGzipped(t *testing.T) {
+	tarPath := createMockTarball(t)
+	ctx := context.Background()
+
+	tarData, err := os.ReadFile(tarPath)
+	if err != nil {
+		t.Fatalf("failed to read mock tarball: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	for _, ext := range []string{".tar.gz", ".tgz"} {
+		gzPath := filepath.Join(tmpDir, "mock_image"+ext)
+		f, err := os.Create(gzPath)
+		if err != nil {
+			t.Fatalf("failed to create gzip file: %v", err)
+		}
+
+		gw := gzip.NewWriter(f)
+		if _, err := gw.Write(tarData); err != nil {
+			t.Fatalf("failed to write gzip content: %v", err)
+		}
+		if err := gw.Close(); err != nil {
+			t.Fatalf("failed to close gzip writer: %v", err)
+		}
+		if err := f.Close(); err != nil {
+			t.Fatalf("failed to close gzip file: %v", err)
+		}
+
+		meta, err := provider.GetMetaTarball(ctx, gzPath)
+		if err != nil {
+			t.Fatalf("GetMetaTarball failed for %s: %v", ext, err)
+		}
+
+		if meta.OS != "linux" {
+			t.Errorf("Expected OS 'linux', got %q for %s", meta.OS, ext)
+		}
+		if len(meta.RepoTags) != 2 || meta.RepoTags[0] != "my-tarball-image:v1.0" {
+			t.Errorf("Expected RepoTags, got %v for %s", meta.RepoTags, ext)
+		}
+
+		metaFallback, err := provider.GetImageMeta(ctx, gzPath, "")
+		if err != nil {
+			t.Fatalf("GetImageMeta fallback failed for %s: %v", ext, err)
+		}
+		if metaFallback.OS != "linux" {
+			t.Errorf("Expected fallback OS 'linux', got %q for %s", metaFallback.OS, ext)
+		}
 	}
 }

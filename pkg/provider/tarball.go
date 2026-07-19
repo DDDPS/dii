@@ -2,20 +2,63 @@ package provider
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	v1 "github.com/moby/docker-image-spec/specs-go/v1"
 )
 
+type gzipReadCloser struct {
+	zr *gzip.Reader
+	f  *os.File
+}
+
+func (g *gzipReadCloser) Read(p []byte) (n int, err error) {
+	return g.zr.Read(p)
+}
+
+func (g *gzipReadCloser) Close() error {
+	err1 := g.zr.Close()
+	err2 := g.f.Close()
+	if err1 != nil {
+		return err1
+	}
+	return err2
+}
+
+func openTarball(tarPath string) (io.ReadCloser, error) {
+	f, err := os.Open(tarPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.HasSuffix(tarPath, ".tar.gz") || strings.HasSuffix(tarPath, ".tgz") {
+		zr, err := gzip.NewReader(f)
+		if err != nil {
+			closeErr := f.Close()
+			if closeErr != nil {
+				log.Printf("warning: failed to close tarball file %s: %v", tarPath, closeErr)
+			}
+			return nil, err
+		}
+		return &gzipReadCloser{zr: zr, f: f}, nil
+	}
+
+	return f, nil
+}
+
 func GetMetaTarball(ctx context.Context, tarPath string) (*ImageMeta, error) {
-	img, err := tarball.ImageFromPath(tarPath, nil)
+	img, err := tarball.Image(func() (io.ReadCloser, error) {
+		return openTarball(tarPath)
+	}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("read tarball error: %v", err)
 	}
@@ -71,17 +114,17 @@ func GetMetaTarball(ctx context.Context, tarPath string) (*ImageMeta, error) {
 }
 
 func getTagsFromTarball(tarPath string) ([]string, error) {
-	f, err := os.Open(tarPath)
+	rc, err := openTarball(tarPath)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		if closeErr := f.Close(); closeErr != nil {
+		if closeErr := rc.Close(); closeErr != nil {
 			log.Printf("warning: failed to close tarball file %s: %v", tarPath, closeErr)
 		}
 	}()
 
-	tr := tar.NewReader(f)
+	tr := tar.NewReader(rc)
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
