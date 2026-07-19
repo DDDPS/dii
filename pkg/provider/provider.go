@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -24,7 +25,11 @@ func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMe
 	case "daemon":
 		p, err := NewDaemonProvider()
 		if p != nil {
-			defer p.cli.Close()
+			defer func() {
+				if closeErr := p.cli.Close(); closeErr != nil {
+					log.Printf("warning: failed to close docker client: %v", closeErr)
+				}
+			}()
 		}
 		if err != nil {
 			return nil, err
@@ -50,7 +55,11 @@ func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMe
 
 		p, err := NewDaemonProvider()
 		if p != nil {
-			defer p.cli.Close()
+			defer func() {
+				if closeErr := p.cli.Close(); closeErr != nil {
+					log.Printf("warning: failed to close docker client: %v", closeErr)
+				}
+			}()
 		}
 
 		if err == nil && p != nil {
@@ -59,12 +68,12 @@ func GetImageMeta(ctx context.Context, imageInput string, mode string) (*ImageMe
 				return imageMate, nil
 			}
 			if strings.Contains(err.Error(), "No such image") {
-				fmt.Fprintf(os.Stderr, "Image not found in local daemon, trying remote registry...\n")
+				fmt.Fprintf(os.Stderr, "Image not found in local daemon\n trying remote registry...\n")
 			} else {
-				fmt.Fprintf(os.Stderr, "Local daemon check failed (%v), trying remote registry...\n", err)
+				fmt.Fprintf(os.Stderr, "Local daemon check failed (%v)\n trying remote registry...\n", err)
 			}
 		} else if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not connect to local Docker daemon, trying remote registry...\n")
+			fmt.Fprintf(os.Stderr, "Could not connect to local Docker daemon\n trying remote registry...\n")
 		}
 
 		imageMate, err := GetMetaRegistry(ctx, imageInput)

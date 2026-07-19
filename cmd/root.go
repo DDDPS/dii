@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -63,7 +64,9 @@ var rootCmd = &cobra.Command{
 					os.Exit(1)
 				}
 			} else {
-				cmd.Println(info)
+				if _, err := fmt.Fprint(cmd.OutOrStdout(), info); err != nil {
+					cmd.PrintErrln("failed to write output:", err)
+				}
 			}
 		}
 	},

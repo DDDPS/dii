@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,12 +26,16 @@ func TestMain(m *testing.M) {
 	buildCmd.Stdout = os.Stdout
 	if err := buildCmd.Run(); err != nil {
 		fmt.Printf("failed to build binary: %v\n", err)
-		os.RemoveAll(tmpDir)
+		if removeErr := os.RemoveAll(tmpDir); removeErr != nil {
+			log.Printf("warning: failed to remove temp dir: %v", removeErr)
+		}
 		os.Exit(1)
 	}
 
 	code := m.Run()
-	os.RemoveAll(tmpDir)
+	if removeErr := os.RemoveAll(tmpDir); removeErr != nil {
+		log.Printf("warning: failed to remove temp dir: %v", removeErr)
+	}
 	os.Exit(code)
 }
 

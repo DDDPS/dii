@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -74,7 +75,11 @@ func getTagsFromTarball(tarPath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			log.Printf("warning: failed to close tarball file %s: %v", tarPath, closeErr)
+		}
+	}()
 
 	tr := tar.NewReader(f)
 	for {

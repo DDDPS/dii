@@ -20,15 +20,25 @@ func createMockTarball(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("failed to create temp tar file: %v", err)
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			t.Logf("warning: failed to close temp tar file: %v", closeErr)
+		}
+	}()
 
 	tw := tar.NewWriter(f)
-	defer tw.Close()
+	defer func() {
+		if closeErr := tw.Close(); closeErr != nil {
+			t.Logf("warning: failed to close tar writer: %v", closeErr)
+		}
+	}()
 
 	// 1. Create a mock layer1.tar (empty tar archive)
 	var layerBuf bytes.Buffer
 	layerTw := tar.NewWriter(&layerBuf)
-	layerTw.Close()
+	if closeErr := layerTw.Close(); closeErr != nil {
+		t.Fatalf("failed to close layerTw: %v", closeErr)
+	}
 	layerBytes := layerBuf.Bytes()
 
 	// Write layer1.tar to main tar
