@@ -17,41 +17,41 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 	sb.WriteString("# Image Metadata\n\n")
 
 	sb.WriteString("## Basic Information\n")
-	sb.WriteString(fmt.Sprintf("- **ID**: `%s`\n", imageMeta.ID))
+	fmt.Fprintf(&sb, "- **ID**: `%s`\n", imageMeta.ID)
 
 	if len(imageMeta.RepoTags) > 0 {
 		sb.WriteString("- **RepoTags**:\n")
 		for _, tag := range imageMeta.RepoTags {
-			sb.WriteString(fmt.Sprintf("  - `%s`\n", tag))
+			fmt.Fprintf(&sb, "  - `%s`\n", tag)
 		}
 	} else {
 		sb.WriteString("- **RepoTags**: none\n")
 	}
 
-	sb.WriteString(fmt.Sprintf("- **OS**: `%s`\n", imageMeta.OS))
-	sb.WriteString(fmt.Sprintf("- **Architecture**: `%s`\n", imageMeta.Architecture))
+	fmt.Fprintf(&sb, "- **OS**: `%s`\n", imageMeta.OS)
+	fmt.Fprintf(&sb, "- **Architecture**: `%s`\n", imageMeta.Architecture)
 	sizeInMB := float64(imageMeta.Size) / 1000 / 1000
-	sb.WriteString(fmt.Sprintf("- **Size**: `%.1f MB`\n", sizeInMB))
-	sb.WriteString(fmt.Sprintf("- **Created**: `%s`\n", imageMeta.Created))
+	fmt.Fprintf(&sb, "- **Size**: `%.1f MB`\n", sizeInMB)
+	fmt.Fprintf(&sb, "- **Created**: `%s`\n", imageMeta.Created)
 	sb.WriteString("\n")
 
 	if imageMeta.Config != nil {
 		sb.WriteString("## Config\n")
 		if imageMeta.Config.User != "" {
-			sb.WriteString(fmt.Sprintf("- **User**: `%s`\n", imageMeta.Config.User))
+			fmt.Fprintf(&sb, "- **User**: `%s`\n", imageMeta.Config.User)
 		}
 		if imageMeta.Config.WorkingDir != "" {
-			sb.WriteString(fmt.Sprintf("- **WorkingDir**: `%s`\n", imageMeta.Config.WorkingDir))
+			fmt.Fprintf(&sb, "- **WorkingDir**: `%s`\n", imageMeta.Config.WorkingDir)
 		}
 		if imageMeta.Config.StopSignal != "" {
-			sb.WriteString(fmt.Sprintf("- **StopSignal**: `%s`\n", imageMeta.Config.StopSignal))
+			fmt.Fprintf(&sb, "- **StopSignal**: `%s`\n", imageMeta.Config.StopSignal)
 		}
 
 		// ExposedPorts
 		if len(imageMeta.Config.ExposedPorts) > 0 {
 			sb.WriteString("- **ExposedPorts**:\n")
 			for port := range imageMeta.Config.ExposedPorts {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", port))
+				fmt.Fprintf(&sb, "  - `%s`\n", port)
 			}
 		}
 
@@ -59,7 +59,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if len(imageMeta.Config.Env) > 0 {
 			sb.WriteString("- **Env**:\n")
 			for _, env := range imageMeta.Config.Env {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", env))
+				fmt.Fprintf(&sb, "  - `%s`\n", env)
 			}
 		}
 
@@ -67,7 +67,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if len(imageMeta.Config.Entrypoint) > 0 {
 			sb.WriteString("- **Entrypoint**:\n")
 			for _, ep := range imageMeta.Config.Entrypoint {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", ep))
+				fmt.Fprintf(&sb, "  - `%s`\n", ep)
 			}
 		}
 
@@ -75,7 +75,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if len(imageMeta.Config.Cmd) > 0 {
 			sb.WriteString("- **Cmd**:\n")
 			for _, cmd := range imageMeta.Config.Cmd {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", cmd))
+				fmt.Fprintf(&sb, "  - `%s`\n", cmd)
 			}
 		}
 
@@ -83,7 +83,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if len(imageMeta.Config.Volumes) > 0 {
 			sb.WriteString("- **Volumes**:\n")
 			for vol := range imageMeta.Config.Volumes {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", vol))
+				fmt.Fprintf(&sb, "  - `%s`\n", vol)
 			}
 		}
 
@@ -91,19 +91,19 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if imageMeta.Config.Healthcheck != nil {
 			sb.WriteString("- **Healthcheck**:\n")
 			if len(imageMeta.Config.Healthcheck.Test) > 0 {
-				sb.WriteString(fmt.Sprintf("  - **Test**: `%s`\n", strings.Join(imageMeta.Config.Healthcheck.Test, " ")))
+				fmt.Fprintf(&sb, "  - **Test**: `%s`\n", strings.Join(imageMeta.Config.Healthcheck.Test, " "))
 			}
-			sb.WriteString(fmt.Sprintf("  - **Interval**: `%s`\n", imageMeta.Config.Healthcheck.Interval))
-			sb.WriteString(fmt.Sprintf("  - **Timeout**: `%s`\n", imageMeta.Config.Healthcheck.Timeout))
-			sb.WriteString(fmt.Sprintf("  - **StartPeriod**: `%s`\n", imageMeta.Config.Healthcheck.StartPeriod))
-			sb.WriteString(fmt.Sprintf("  - **Retries**: `%d`\n", imageMeta.Config.Healthcheck.Retries))
+			fmt.Fprintf(&sb, "  - **Interval**: `%s`\n", imageMeta.Config.Healthcheck.Interval)
+			fmt.Fprintf(&sb, "  - **Timeout**: `%s`\n", imageMeta.Config.Healthcheck.Timeout)
+			fmt.Fprintf(&sb, "  - **StartPeriod**: `%s`\n", imageMeta.Config.Healthcheck.StartPeriod)
+			fmt.Fprintf(&sb, "  - **Retries**: `%d`\n", imageMeta.Config.Healthcheck.Retries)
 		}
 
 		// Shell
 		if len(imageMeta.Config.Shell) > 0 {
 			sb.WriteString("- **Shell**:\n")
 			for _, sh := range imageMeta.Config.Shell {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", sh))
+				fmt.Fprintf(&sb, "  - `%s`\n", sh)
 			}
 		}
 
@@ -111,7 +111,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 		if len(imageMeta.Config.OnBuild) > 0 {
 			sb.WriteString("- **OnBuild**:\n")
 			for _, ob := range imageMeta.Config.OnBuild {
-				sb.WriteString(fmt.Sprintf("  - `%s`\n", ob))
+				fmt.Fprintf(&sb, "  - `%s`\n", ob)
 			}
 		}
 
