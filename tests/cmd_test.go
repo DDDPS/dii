@@ -165,3 +165,19 @@ func TestCLIWriteToFile(t *testing.T) {
 		t.Errorf("Expected stderr to confirm writing to file, got: %q", stderrMsg)
 	}
 }
+
+func TestCLIVersion(t *testing.T) {
+	cmd := exec.Command(binPath, "version")
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("CLI command failed: %v", err)
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "dii version") {
+		t.Errorf("Expected output to contain 'dii version', got: %q", output)
+	}
+}
