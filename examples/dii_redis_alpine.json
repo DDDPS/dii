@@ -1,0 +1,26 @@
+{
+  "Id": "sha256:cd5f3ac681c77791c6a8eaa62de876ad2be043ee5a428afb7c0095aa08246277",
+  "RepoTags": [
+    "redis:alpine"
+  ],
+  "Os": "linux",
+  "Architecture": "amd64",
+  "Size": 37625446,
+  "Created": "2026-06-22T20:02:55Z",
+  "Config": {
+    "ExposedPorts": {
+      "6379/tcp": {}
+    },
+    "Env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "REDIS_VERSION=8.8.0"
+    ],
+    "Entrypoint": [
+      "docker-entrypoint.sh"
+    ],
+    "Cmd": [
+      "redis-server"
+    ],
+    "WorkingDir": "/data"
+  }
+}

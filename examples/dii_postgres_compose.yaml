@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+    postgres:
+        image: postgres
+        platform: linux/amd64
+        container_name: ${POSTGRES_CONTAINER_NAME:-postgres_container}
+        restart: ${POSTGRES_RESTART:-always}
+        stop_signal: SIGINT
+        entrypoint:
+            - docker-entrypoint.sh
+        command:
+            - postgres
+        ports:
+            - ${POSTGRES_PORT:-5432}:5432
+        volumes:
+            - ${POSTGRES_VOL_POSTGRESQL:-./postgresql}:/var/lib/postgresql
+        environment:
+            GOSU_VERSION: ${GOSU_VERSION:-1.19}
+            PG_MAJOR: ${PG_MAJOR:-18}
+            PG_VERSION: ${PG_VERSION:-18.4-1.pgdg13+1}
+            PGDATA: ${PGDATA:-/var/lib/postgresql/18/docker}

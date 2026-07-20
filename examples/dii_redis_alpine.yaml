@@ -1,0 +1,18 @@
+Architecture: amd64
+Config:
+    Cmd:
+        - redis-server
+    Entrypoint:
+        - docker-entrypoint.sh
+    Env:
+        - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        - REDIS_VERSION=8.8.0
+    ExposedPorts:
+        6379/tcp: {}
+    WorkingDir: /data
+Created: "2026-06-22T20:02:55Z"
+Id: sha256:cd5f3ac681c77791c6a8eaa62de876ad2be043ee5a428afb7c0095aa08246277
+Os: linux
+RepoTags:
+    - redis:alpine
+Size: 37625446

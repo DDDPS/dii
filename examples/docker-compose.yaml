@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+    hugo:
+        image: ghcr.io/gohugoio/hugo
+        platform: linux/amd64
+        container_name: ${HUGO_CONTAINER_NAME:-hugo_container}
+        restart: ${HUGO_RESTART:-always}
+        user: ${HUGO_USER:-hugo:hugo}
+        working_dir: /project
+        entrypoint:
+            - /entrypoint.sh
+        command:
+            - --help
+        ports:
+            - ${HUGO_PORT:-1313}:1313
+        volumes:
+            - ${HUGO_VOL_PROJECT:-./project}:/project
+        environment:
+            GOTOOLCHAIN: ${GOTOOLCHAIN:-local}
+            HUGO_CACHEDIR: ${HUGO_CACHEDIR:-/cache}
+        labels:
+            org.opencontainers.image.created: "2026-07-06T17:49:03.751Z"
+            org.opencontainers.image.description: The world’s fastest framework for building websites.
+            org.opencontainers.image.licenses: Apache-2.0
+            org.opencontainers.image.revision: ce2470e7012b5ab5fc4e10ebe4027e9f8d9e00dc
+            org.opencontainers.image.source: https://github.com/gohugoio/hugo
+            org.opencontainers.image.title: hugo
+            org.opencontainers.image.url: https://github.com/gohugoio/hugo
+            org.opencontainers.image.version: v0.164.0
