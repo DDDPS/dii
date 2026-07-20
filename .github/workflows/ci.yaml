@@ -12,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.3'
+          go-version-file: "go.mod"
+          cache: true
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
@@ -30,7 +32,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.3'
+          go-version-file: "go.mod"
+          cache: true
       - name: Run Unit Tests
         run: go test -v ./tests
 
@@ -48,7 +51,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.3'
+          go-version-file: "go.mod"
+          cache: true
 
       - name: Build Binary
         env:
@@ -59,9 +63,9 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
           go build -v -o dist/dii-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} main.go
 
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
         with:
           name: dii-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
+

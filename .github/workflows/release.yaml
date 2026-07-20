@@ -1,0 +1,78 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Cross-Platform Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          EXT=""
+          if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
+          go build -v \
+            -ldflags="-s -w -X 'DII/cmd.Version=${{ github.ref_name }}'" \
+            -o dist/dii-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} \
+            main.go
+
+      - name: Verify Linux Artifact
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
+        run: |
+          chmod +x dist/dii-linux-amd64
+          dist/dii-linux-amd64 --help
+
+      - name: Upload Temporary Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: dii-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/
+
+  publish:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: assets/
+          merge-multiple: true
+
+      - name: Display Structure of Downloaded Files
+        run: ls -R assets/
+
+      - name: Generate Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            assets/dii-linux-amd64
+            assets/dii-linux-arm64
+            assets/dii-windows-amd64.exe
+            assets/dii-windows-arm64.exe
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: false
+          body: "Initial release of dii with cross-platform support."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
