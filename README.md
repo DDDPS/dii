@@ -23,6 +23,23 @@ Output formats (`-o`):
 
 ---
 
+## Environment Variables
+
+- `DII_MIRROR`: Specifies mirror sources for remote registry fetching. **Ensures custom mirrors can still be configured even in environments without Docker running**. Supports multiple mirrors separated by commas `,` or semicolons `;`:
+  ```bash
+  export DII_MIRROR="mirror1.docker.io,mirror2.docker.io"
+  ```
+
+### Registry Mirror Priority
+
+When fetching remote images, `dii` attempts to obtain image metadata in the following order:
+
+1. **Environment variable `DII_MIRROR`** (highest priority)
+2. **Local Docker configuration** (if the environment variable is not set, automatically reads mirror settings from `/etc/docker/daemon.json`)
+3. **Default official registry** (if none of the above are configured or all attempts fail, falls back to direct connection to `docker.io`)
+
+---
+
 ## Installation
 
 ```bash

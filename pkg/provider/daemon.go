@@ -41,3 +41,12 @@ func (p *DaemonProvider) GetMetaDaemon(ctx context.Context, imageInput string) (
 	}, nil
 
 }
+
+func (p *DaemonProvider) GetMirrorFromDocker(ctx context.Context) ([]string, error) {
+	info, err := p.cli.Info(ctx, client.InfoOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("daemon info error: %v", err)
+	}
+
+	return info.Info.RegistryConfig.Mirrors, nil
+}

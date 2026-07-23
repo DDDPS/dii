@@ -3,14 +3,17 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
+	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	v1 "github.com/moby/docker-image-spec/specs-go/v1"
 )
@@ -20,6 +23,9 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 	if err != nil {
 		return nil, fmt.Errorf("parse image error: %v", err)
 	}
+	regStr := tag.Context().RegistryStr()
+	repoStr := tag.Context().RepositoryStr()
+	tagStr := tag.Identifier()
 
 	customTransport := &http.Transport{
 		DialContext: (&net.Dialer{
@@ -34,13 +40,46 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 		ExpectContinueTimeout: 1 * time.Second,  //ExpectContinue握手超时
 	}
 
-	img, err := remote.Image(tag,
-		remote.WithContext(ctx),
-		remote.WithAuthFromKeychain(authn.DefaultKeychain),
-		remote.WithTransport(customTransport),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("pull image from registry error: %v", err)
+	var img ggcrv1.Image
+	var pullErr error
+
+	if regStr == "index.docker.io" || regStr == "docker.io" {
+		var mirrors []string
+
+		if envMirror := os.Getenv("DII_MIRROR"); envMirror != "" {
+			for _, m := range strings.FieldsFunc(envMirror, func(r rune) bool {
+				return r == ',' || r == ';'
+			}) {
+				if cleaned := strings.TrimSpace(m); cleaned != "" {
+					mirrors = append(mirrors, cleaned)
+				}
+			}
+		}
+
+		if len(mirrors) == 0 {
+			if p, err := NewDaemonProvider(); err == nil {
+				if daemonMirrors, err := p.GetMirrorFromDocker(ctx); err == nil && len(daemonMirrors) > 0 {
+					mirrors = append(mirrors, daemonMirrors...)
+				}
+			}
+		}
+
+		if len(mirrors) > 0 {
+			img, pullErr = tryMirrors(ctx, mirrors, repoStr, tagStr, customTransport)
+		}
+	}
+
+	if img == nil {
+		fmt.Fprintf(os.Stderr, "Mirror failed or unavailable, falling back to original registry...\n")
+		img, pullErr = remote.Image(tag,
+			remote.WithContext(ctx),
+			remote.WithAuthFromKeychain(authn.DefaultKeychain),
+			remote.WithTransport(customTransport),
+		)
+	}
+
+	if pullErr != nil {
+		return nil, fmt.Errorf("pull image error: %w", pullErr)
 	}
 
 	cfgFile, err := img.ConfigFile()
@@ -85,4 +124,31 @@ func GetMetaRegistry(ctx context.Context, imageInput string) (*ImageMeta, error)
 
 	fmt.Fprintf(os.Stderr, "This image is from the remote registry.\n")
 	return imageMeta, nil
+}
+
+func tryMirrors(ctx context.Context, mirrors []string, repo, tag string, transport http.RoundTripper) (ggcrv1.Image, error) {
+	var errs []error
+	for _, mirror := range mirrors {
+		cleanMirror := strings.TrimPrefix(mirror, "https://")
+		cleanMirror = strings.TrimPrefix(cleanMirror, "http://")
+		cleanMirror = strings.TrimRight(cleanMirror, "/")
+
+		ref := fmt.Sprintf("%s/%s:%s", cleanMirror, repo, tag)
+		parsed, err := name.ParseReference(ref)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("mirror %s parse error: %w", mirror, err))
+			continue
+		}
+		img, err := remote.Image(parsed,
+			remote.WithContext(ctx),
+			remote.WithAuthFromKeychain(authn.DefaultKeychain),
+			remote.WithTransport(transport),
+		)
+		if err == nil {
+			return img, nil
+		}
+		errs = append(errs, fmt.Errorf("mirror %s error: %w", mirror, err))
+	}
+
+	return nil, errors.Join(errs...)
 }

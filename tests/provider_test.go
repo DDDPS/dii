@@ -215,3 +215,19 @@ func TestGetMetaTarballGzipped(t *testing.T) {
 		}
 	}
 }
+
+func TestGetMetaRegistryEnvMirror(t *testing.T) {
+	ctx := context.Background()
+
+	t.Setenv("DII_MIRROR", "invalid.mirror.host.local, another.invalid.mirror:8080")
+	_, err := provider.GetMetaRegistry(ctx, "nonexistent-image-xyz:9.9.9")
+	if err == nil {
+		t.Error("Expected error for non-existent image with env mirror, got nil")
+	}
+
+	t.Setenv("DII_MIRROR", " mirror1.example.com; mirror2.example.com , mirror3.example.com ")
+	_, err = provider.GetMetaRegistry(ctx, "nonexistent-image-xyz:9.9.9")
+	if err == nil {
+		t.Error("Expected error for non-existent image with multiple env mirrors, got nil")
+	}
+}
