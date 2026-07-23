@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, windows]
+        goos: [linux, windows, darwin]
         goarch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v7
@@ -27,6 +27,7 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
         run: |
           EXT=""
           if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
@@ -45,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: dii-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/
+          path: dist/dii-${{ matrix.goos }}-${{ matrix.goarch }}*
 
   publish:
     name: Create GitHub Release
@@ -66,13 +67,8 @@ jobs:
       - name: Generate Release
         uses: softprops/action-gh-release@v3
         with:
-          files: |
-            assets/dii-linux-amd64
-            assets/dii-linux-arm64
-            assets/dii-windows-amd64.exe
-            assets/dii-windows-arm64.exe
+          files: assets/*
           name: Release ${{ github.ref_name }}
-          generate_release_notes: false
-          body: "Initial release of dii with cross-platform support."
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
