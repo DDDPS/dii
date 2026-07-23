@@ -69,4 +69,5 @@ jobs:
         with:
           name: dii-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/dii-${{ matrix.goos }}-${{ matrix.goarch }}*
+          overwrite: true
 
