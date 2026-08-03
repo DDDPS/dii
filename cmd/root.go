@@ -90,7 +90,7 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.Flags().SortFlags = false
-	rootCmd.Flags().StringVarP(&format, "output", "o", "md", "Output format: markdown,json,yaml,compose")
+	rootCmd.Flags().StringVarP(&format, "output", "o", "yaml", "Output format: markdown,json,yaml,compose")
 	rootCmd.Flags().BoolVarP(&useDaemon, "daemon", "d", false, "Retrieve image data via the local Docker daemon")
 	rootCmd.Flags().BoolVarP(&useRegistry, "registry", "r", false, "Retrieve image data via a remote registry")
 	rootCmd.Flags().BoolVarP(&useTarball, "tar", "t", false, "Retrieve image data from a local image(support .tar, .tar.gz, .tgz)")
