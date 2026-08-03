@@ -1,42 +1,8 @@
 # DII — Docker Image Inspector
 
-A command-line tool for extracting Docker/OCI image metadata, with support for multiple data sources and output formats.
+Inspect Docker/OCI image metadata without pulling image layers.
 
 **[中文](README_zh.md)**
-
----
-
-## Features
-
-Data sources:
-
-- **Local Docker Daemon** (`-d`): Query locally available images via the local Docker daemon
-- **Remote Registry** (`-r`): Fetch only the image config file from a remote registry, without downloading image layers
-- **Tar archive** (`-t`): Parse archives exported by `docker save` (`.tar`, `.tar.gz`, `.tgz`), with streaming decompression and no extra disk usage
-
-When no source is specified, the tool automatically tries in order: `Tar archive → Local Daemon → Remote Registry`.
-
-Output formats (`-o`):
-
-- `md` (default) / `json` / `yaml`: The same image metadata in different formats
-- `compose`: Generate a parameterized `docker-compose.yaml` from the image config (e.g. `${APP_PORT:-8080}`)
-
----
-
-## Environment Variables
-
-- `DII_MIRROR`: Specifies mirror sources for remote registry fetching. **Ensures custom mirrors can still be configured even in environments without Docker running**. Supports multiple mirrors separated by commas `,` or semicolons `;`:
-  ```bash
-  export DII_MIRROR="mirror1.docker.io,mirror2.docker.io"
-  ```
-
-### Registry Mirror Priority
-
-When fetching remote images, `dii` attempts to obtain image metadata in the following order:
-
-1. **Environment variable `DII_MIRROR`** (highest priority)
-2. **Local Docker configuration** (if the environment variable is not set, automatically reads mirror settings from `/etc/docker/daemon.json`)
-3. **Default official registry** (if none of the above are configured or all attempts fail, falls back to direct connection to `docker.io`)
 
 ---
 
@@ -46,13 +12,7 @@ When fetching remote images, `dii` attempts to obtain image metadata in the foll
 curl -fsSL https://raw.githubusercontent.com/DDDPS/dii/main/install.sh | bash
 ```
 
-### Manual download
-
-Download the binary from the [Releases](https://github.com/DDDPS/dii/releases) page.
-
-### Build from source
-
-**Prerequisite:** Go 1.26+
+Or download a pre-built binary from [Releases](https://github.com/DDDPS/dii/releases), or build from source (requires Go 1.26+):
 
 ```bash
 git clone https://github.com/DDDPS/dii.git && cd dii
@@ -61,32 +21,45 @@ go build -o dii main.go
 
 ---
 
-## Quick Start
+## Usage
 
-| Feature | Command | Description | Example Output |
-| :--- | :--- | :--- | :--- |
-| **Auto-detect** | `dii ubuntu:latest` | Auto-selects the data source; outputs Markdown by default | [Example](examples/dii_ubuntu_latest.md) |
-| **Local Daemon** | `dii -d mysql:8.0` | Explicitly use the local Docker daemon | [Example](examples/dii_daemon_mysql_8.0.md) |
-| **Remote Registry** | `dii -r nginx:alpine` | Explicitly use a remote registry (no layer download) | [Example](examples/dii_registry_nginx_alpine.md) |
-| **Tar archive** | `dii -t ./my-image.tar.gz` | Parse a local tar archive | [Example](examples/dii_tar_my_image.md) |
-| **JSON / YAML** | `dii redis:alpine -o json` / `-o yaml` | Output raw image config | [JSON](examples/dii_redis_alpine.json) / [YAML](examples/dii_redis_alpine.yaml) |
-| **Generate Compose** | `dii postgres -o compose` | Generate a `docker-compose.yaml` | [Example](examples/dii_postgres_compose.yaml) |
-| **Write to file** | `dii ghcr.io/gohugoio/hugo -o compose -w docker-compose.yaml` | Write output to a file (mode 0644) | [Example](examples/docker-compose.yaml) |
-
----
-
-## Flags
-
-```
+```text
 dii [flags] IMAGE
 
-  -o, --output string   Output format: md / json / yaml / compose (default: md)
-  -d, --daemon          Fetch via local Docker daemon
-  -r, --registry        Fetch via remote registry
-  -t, --tar             Fetch from local tar archive (.tar / .tar.gz / .tgz)
-  -w, --write string    Write output to a file (mode 0644)
+  -o, --output string   Output format: md | json | yaml | compose (default: yaml)
+  -d, --daemon          Inspect via local Docker daemon
+  -r, --registry        Inspect via remote registry
+  -t, --tar             Inspect a docker save archive (.tar / .tar.gz / .tgz)
+  -w, --write string    Write output to a file (0644)
 ```
+
+| Task | Command | Example |
+|------|---------|---------|
+| Auto-detect source | `dii ubuntu:latest` | [example](examples/dii_ubuntu_latest.yaml) |
+| Local Docker daemon | `dii -d mysql:8.0` | [example](examples/dii_daemon_mysql_8.0.yaml) |
+| Remote registry | `dii -r nginx:alpine` | [example](examples/dii_registry_nginx_alpine.yaml) |
+| Tar archive | `dii -t image.tar.gz` | [example](examples/dii_tar_my_image.md) |
+| JSON output | `dii redis:alpine -o json` | [example](examples/dii_redis_alpine.json) |
+| Markdown output | `dii redis:alpine -o md` | [example](examples/dii_redis_alpine.md) |
+| Generate Compose | `dii -r ghcr.io/gohugoio/hugo -o compose` | [example](examples/dii_hugo_compose.yaml) |
+| Write to file | `dii nginx -o compose -w docker-compose.yaml` | [example](examples/docker-compose.yaml) |
+
+When no source flag is given, `dii` tries in order: **Tar → Local Daemon → Remote Registry**.
+
+> Only one source flag (`-d`, `-r`, `-t`) may be used at a time.
 
 ---
 
-[MIT License](LICENSE)
+## Environment Variables
+
+**`DII_MIRROR`** — Registry mirrors for remote inspection, useful on machines without Docker.
+
+```bash
+export DII_MIRROR="mirror1.example.com,mirror2.example.com"
+```
+
+Mirror resolution order: `DII_MIRROR` → `/etc/docker/daemon.json` → `docker.io`
+
+---
+
+[MIT](LICENSE)

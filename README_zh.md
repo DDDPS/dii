@@ -1,42 +1,8 @@
 # DII — Docker Image Inspector
 
-一个用于提取 Docker/OCI 镜像元数据的命令行工具，支持多种数据源与输出格式。
+无需拉取镜像，即可查看 Docker/OCI 镜像元数据。
 
 **[English](README.md)**
-
----
-
-## 特性
-
-数据来源：
-
-- **本地 Docker Daemon**（`-d`）：通过本地Docker守护进程查询本地已有镜像
-- **远程 Registry**（`-r`）：仅获取远程镜像的配置文件，不下载镜像层
-- **Tar包**（`-t`）：解析 `docker save` 导出的 `.tar`、`.tar.gz`、`.tgz`，流式解压，不占用额外磁盘空间
-
-不指定来源时，自动按 `Tar包 → 本地 Daemon → 远程 Registry` 顺序尝试。
-
-支持以下格式输出（`-o`）：
-
-- `md`（默认）/ `json` / `yaml`：以不同格式输出相同的镜像元数据
-- `compose`：根据镜像配置生成参数化的 `docker-compose.yaml`（如 `${APP_PORT:-8080}`）
-
----
-
-## 环境变量
-
-- `DII_MIRROR`：用于指定远程镜像拉取的加速源。**确保在没有 Docker 的运行环境下**，依然可以配置使用自定义加速源解析镜像。支持配置多个加速源，使用逗号 `,` 或分号 `;` 分隔：
-  ```bash
-  export DII_MIRROR="mirror1.docker.io,mirror2.docker.io"
-  ```
-
-### 镜像源解析优先级
-
-从远程拉取镜像时，`dii` 会按以下顺序依次尝试获取镜像元数据：
-
-1. **环境变量 `DII_MIRROR`**（最高优先级）
-2. **本地 Docker 配置文件**（若未设置环境变量，自动读取 `/etc/docker/daemon.json` 中的加速源配置）
-3. **默认官方源**（若上述均未配置或尝试失败，自动回退直连 `docker.io`）
 
 ---
 
@@ -46,14 +12,7 @@
 curl -fsSL https://raw.githubusercontent.com/DDDPS/dii/main/install.sh | bash
 ```
 
-
-### 手动下载
-
-[Releases](https://github.com/DDDPS/dii/releases) 下载二进制文件。
-
-### 源码编译
-
-**前提：** Go 1.26+
+从 [Releases](https://github.com/DDDPS/dii/releases) 下载预编译二进制文件，也可从源码构建（需要 Go 1.26+）：
 
 ```bash
 git clone https://github.com/DDDPS/dii.git && cd dii
@@ -62,32 +21,45 @@ go build -o dii main.go
 
 ---
 
-## 快速开始
+## 使用
 
-| 功能 | 命令 | 说明 | 输出示例 |
-| :--- | :--- | :--- | :--- |
-| **自动检测** | `dii ubuntu:latest` | 自动匹配数据源，默认输出 Markdown | [示例](examples/dii_ubuntu_latest.md) |
-| **本地 Daemon** | `dii -d mysql:8.0` | 显式指定本地 Docker Daemon | [示例](examples/dii_daemon_mysql_8.0.md) |
-| **远程 Registry** | `dii -r nginx:alpine` | 显式指定远程 Registry（不拉取镜像层） | [示例](examples/dii_registry_nginx_alpine.md) |
-| **Tar 包** | `dii -t ./my-image.tar.gz` | 解析本地Tar归档文件 | [示例](examples/dii_tar_my_image.md) |
-| **JSON / YAML** | `dii redis:alpine -o json` / `-o yaml` | 输出原始镜像配置 | [JSON](examples/dii_redis_alpine.json) / [YAML](examples/dii_redis_alpine.yaml) |
-| **生成 Compose** | `dii postgres -o compose` | 生成 `docker-compose.yaml` | [示例](examples/dii_postgres_compose.yaml) |
-| **写入文件** | `dii ghcr.io/gohugoio/hugo -o compose -w docker-compose.yaml` | 将结果写入指定文件（0644） | [示例](examples/docker-compose.yaml) |
-
----
-
-## 参数
-
-```
+```text
 dii [flags] IMAGE
 
-  -o, --output string   输出格式：md / json / yaml / compose（默认 md）
-  -d, --daemon          通过本地 Docker Daemon 获取
-  -r, --registry        通过远程 Registry 获取
-  -t, --tar             从本地归档文件获取（.tar / .tar.gz / .tgz）
-  -w, --write string    将结果写入文件（权限 0644）
+  -o, --output string   输出格式：md | json | yaml | compose（默认：yaml）
+  -d, --daemon          通过本地 Docker 守护进程获取
+  -r, --registry        通过远程镜像仓库获取
+  -t, --tar             从 docker save 归档文件获取（.tar / .tar.gz / .tgz）
+  -w, --write string    将输出写入文件（0644）
 ```
+
+| 功能 | 命令 | 示例 |
+|------|------|------|
+| 自动检测数据源 | `dii ubuntu:latest` | [example](examples/dii_ubuntu_latest.yaml) |
+| 本地 Docker 守护进程 | `dii -d mysql:8.0` | [example](examples/dii_daemon_mysql_8.0.yaml) |
+| 远程镜像仓库 | `dii -r nginx:alpine` | [example](examples/dii_registry_nginx_alpine.yaml) |
+| Tar 归档文件 | `dii -t image.tar.gz` | [example](examples/dii_tar_my_image.md) |
+| JSON 输出 | `dii redis:alpine -o json` | [example](examples/dii_redis_alpine.json) |
+| Markdown 输出 | `dii redis:alpine -o md` | [example](examples/dii_redis_alpine.md) |
+| 生成 Compose | `dii -r ghcr.io/gohugoio/hugo -o compose` | [example](examples/dii_hugo_compose.yaml) |
+| 写入文件 | `dii nginx -o compose -w docker-compose.yaml` | [example](examples/docker-compose.yaml) |
+
+不指定来源时，自动按 **Tar → 本地 Daemon → 远程 Registry** 顺序尝试。
+
+> 数据源参数（`-d`、`-r`、`-t`）同时只能使用一个。
 
 ---
 
-[MIT License](LICENSE)
+## 环境变量
+
+**`DII_MIRROR`** — 指定远程拉取时的加速源，在没有安装 Docker 的机器上同样有效。
+
+```bash
+export DII_MIRROR="mirror1.example.com,mirror2.example.com"
+```
+
+解析优先级：`DII_MIRROR` → `/etc/docker/daemon.json` → `docker.io`
+
+---
+
+[MIT](LICENSE)
