@@ -1,0 +1,24 @@
+Architecture: amd64
+Config:
+    Cmd:
+        - mysqld
+    Entrypoint:
+        - docker-entrypoint.sh
+    Env:
+        - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        - GOSU_VERSION=1.19
+        - MYSQL_MAJOR=8.0
+        - MYSQL_VERSION=8.0.46-1.el9
+        - MYSQL_SHELL_VERSION=8.0.46-1.el9
+    ExposedPorts:
+        3306/tcp: {}
+        33060/tcp: {}
+    Volumes:
+        /var/lib/mysql: {}
+    WorkingDir: /
+Created: "2026-05-04T23:01:20Z"
+Id: sha256:62fb722c78b24245ddff1796a0fcee4a49cc5b87e0aaaf20c92d1da9e0a2497b
+Os: linux
+RepoTags:
+    - mysql:8.0
+Size: 233581538
