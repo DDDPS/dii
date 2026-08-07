@@ -56,6 +56,7 @@ func openTarball(tarPath string) (io.ReadCloser, error) {
 }
 
 func GetMetaTarball(ctx context.Context, tarPath string) (*ImageMeta, error) {
+	//support .tar .tar.gz .tgz
 	img, err := tarball.Image(func() (io.ReadCloser, error) {
 		return openTarball(tarPath)
 	}, nil)

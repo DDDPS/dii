@@ -29,6 +29,17 @@ var rootCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 
 	Run: func(cmd *cobra.Command, args []string) {
+		validFormats := map[string]bool{
+			"md":      true,
+			"json":    true,
+			"yaml":    true,
+			"compose": true,
+		}
+		if !validFormats[format] {
+			cmd.PrintErrf("Error: invalid output format %q, must be one of: md, json, yaml, compose\n", format)
+			os.Exit(1)
+		}
+
 		count := 0
 		if useDaemon {
 			count++
@@ -90,7 +101,7 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.Flags().SortFlags = false
-	rootCmd.Flags().StringVarP(&format, "output", "o", "yaml", "Output format: markdown,json,yaml,compose")
+	rootCmd.Flags().StringVarP(&format, "output", "o", "yaml", "Output format: md,json,yaml,compose")
 	rootCmd.Flags().BoolVarP(&useDaemon, "daemon", "d", false, "Retrieve image data via the local Docker daemon")
 	rootCmd.Flags().BoolVarP(&useRegistry, "registry", "r", false, "Retrieve image data via a remote registry")
 	rootCmd.Flags().BoolVarP(&useTarball, "tar", "t", false, "Retrieve image data from a local image(support .tar, .tar.gz, .tgz)")
