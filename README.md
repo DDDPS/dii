@@ -60,6 +60,9 @@ export DII_MIRROR="mirror1.example.com,mirror2.example.com"
 
 Mirror resolution order: `DII_MIRROR` → `/etc/docker/daemon.json` → `docker.io`
 
+## Issues
+If you encounter any bugs, have questions, or feature requests, feel free to open an issue on [GitHub Issues](https://github.com/DDDPS/dii/issues).
+
 ---
 
 [MIT](LICENSE)

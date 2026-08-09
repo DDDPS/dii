@@ -60,6 +60,9 @@ export DII_MIRROR="mirror1.example.com,mirror2.example.com"
 
 解析优先级：`DII_MIRROR` → `/etc/docker/daemon.json` → `docker.io`
 
+## Issue
+如果遇到 Bug、有新功能建议或使用疑问，欢迎在 [GitHub Issues](https://github.com/DDDPS/dii/issues) 提交反馈！
+
 ---
 
 [MIT](LICENSE)
