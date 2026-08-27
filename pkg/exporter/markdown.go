@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/docker/go-units"
 )
 
 func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
@@ -30,8 +32,7 @@ func ExportMarkdown(imageMeta *provider.ImageMeta) (string, error) {
 
 	fmt.Fprintf(&sb, "- **OS**: `%s`\n", imageMeta.OS)
 	fmt.Fprintf(&sb, "- **Architecture**: `%s`\n", imageMeta.Architecture)
-	sizeInMB := float64(imageMeta.Size) / 1000 / 1000
-	fmt.Fprintf(&sb, "- **Size**: `%.1f MB`\n", sizeInMB)
+	fmt.Fprintf(&sb, "- **Size**: `%s`\n", units.HumanSize(float64(imageMeta.Size)))
 	fmt.Fprintf(&sb, "- **Created**: `%s`\n", imageMeta.Created)
 	sb.WriteString("\n")
 

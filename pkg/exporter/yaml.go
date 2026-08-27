@@ -3,11 +3,17 @@ package exporter
 import (
 	"DII/pkg/provider"
 	"encoding/json"
+	"fmt"
 
+	"github.com/docker/go-units"
 	"gopkg.in/yaml.v3"
 )
 
 func ExportYaml(imageMeta *provider.ImageMeta) (string, error) {
+	if imageMeta == nil {
+		return "", fmt.Errorf("imageMeta is nil")
+	}
+
 	// yaml.v3 默认不会扁平化嵌套结构体，所以需要先将嵌套结构体序列化为JSON
 	jsonData, err := json.Marshal(imageMeta)
 	if err != nil {
@@ -18,6 +24,10 @@ func ExportYaml(imageMeta *provider.ImageMeta) (string, error) {
 	// 反序列化JSON到通用结构中，以消除结构体类型的约束并扁平化字段
 	if err := json.Unmarshal(jsonData, &generic); err != nil {
 		return "", err
+	}
+
+	if m, ok := generic.(map[string]interface{}); ok {
+		m["Size"] = units.HumanSize(float64(imageMeta.Size))
 	}
 
 	cleanedGeneric := cleanNumbers(generic)

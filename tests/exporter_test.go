@@ -97,6 +97,15 @@ func TestExportYaml(t *testing.T) {
 	if parsed["Id"] != im.ID {
 		t.Errorf("Expected Id %q, got %v", im.ID, parsed["Id"])
 	}
+	if parsed["Size"] != "123.5MB" {
+		t.Errorf("Expected Size %q, got %v", "123.5MB", parsed["Size"])
+	}
+
+	// Test nil ImageMeta
+	_, err = exporter.ExportYaml(nil)
+	if err == nil {
+		t.Error("Expected error when ExportYaml is called with nil")
+	}
 }
 
 func TestExportMarkdown(t *testing.T) {
@@ -114,7 +123,7 @@ func TestExportMarkdown(t *testing.T) {
 		"sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
 		"test-image:latest",
 		"test-image:v1.0",
-		"123.5 MB",
+		"123.5MB",
 		"1001",
 		"/workspace",
 		"80/tcp",
